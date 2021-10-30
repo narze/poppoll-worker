@@ -1,11 +1,13 @@
 name = "poppoll-worker"
-type = "javascript"
+type = "webpack"
 zone_id = ""
 account_id = "04a9de6e38c946f1e83355b6faa9c657"
 route = ""
 workers_dev = true
 compatibility_date = "2021-10-30"
-
+webpack_config = "webpack.config.js"
+[vars]
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzNTU4MDMwMCwiZXhwIjoxOTUxMTU2MzAwfQ._ylJn_-3ONGFN6ZUGFiy9zVyBh5KPitBv0F0XNQ-73U"
 [build]
 command = "npm install && npm run build"
 [build.upload]
