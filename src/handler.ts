@@ -10,7 +10,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 export async function getPollWithKey(key: string): Promise<Response> {
   const { body, error } = await supabase
     .from('poll')
-    .select()
+    .select(
+      `
+       key,
+       name,
+       start_at,
+       end_at,
+       poll_option (
+         id,
+         name,
+         count
+       )
+    `,
+    )
     .eq('key', key)
     .limit(1)
 
@@ -49,7 +61,88 @@ export async function createPoll(request: Request): Promise<Response> {
 
     const result = body && body[0]
 
+    const { options } = data as any
+
+    const { data: optiondata, error: optionerror } = await supabase
+      .from('poll_option')
+      .insert(
+        options.map((option: any) => ({ ...option, poll_key: result.key })),
+      )
+
+    if (optionerror) {
+      return response({ error: optionerror.message }, 400)
+    }
+
+    result.options = optiondata
+
     return response(result, 201)
+  } catch (error) {
+    return response({ error: (error as Error).message }, 400)
+  }
+}
+
+// create or replace function upvote(key text, option_id int, increment_count int)
+// returns void as
+// $$
+//   update poll_option
+//   set count = count + increment_count
+//   where poll_key = key AND id = option_id
+// $$
+// language sql volatile;
+export async function upvote(key: string, request: Request): Promise<Response> {
+  const data = await request.json()
+  console.log('upvote data', JSON.stringify(data))
+  const { data: options } = data as any
+
+  await Promise.all(
+    options.map(async (option: any) => {
+      const { id, name, count } = option
+      if (!name || !count) {
+        return response({ error: 'Invalid input' }, 400)
+      }
+
+      const { data: upvoteData, error: upvoteError } = await supabase.rpc(
+        'upvote',
+        {
+          key,
+          option_id: id,
+          increment_count: count,
+        },
+      )
+      console.log({ upvoteError, upvoteData })
+    }),
+  )
+
+  try {
+    const { body, error } = await supabase
+      .from('poll')
+      .select(
+        `
+        key,
+        name,
+        start_at,
+        end_at,
+        poll_option (
+          id,
+          name,
+          count
+        )
+      `,
+      )
+      .eq('key', key)
+      .limit(1)
+
+    if (error) {
+      return response({ error: error.message }, 400)
+    }
+
+    if (body && !body.length) {
+      return response({ error: 'Not Found' }, 404)
+    }
+
+    const result = body && body[0]
+
+    return response(result, 200)
   } catch (error) {
     return response({ error: (error as Error).message }, 400)
   }

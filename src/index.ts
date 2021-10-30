@@ -1,4 +1,4 @@
-import { getPollWithKey, createPoll } from './handler'
+import { getPollWithKey, createPoll, upvote } from './handler'
 
 addEventListener('fetch', (event) => {
   const { pathname } = new URL(event.request.url)
@@ -24,6 +24,13 @@ addEventListener('fetch', (event) => {
 
   if (event.request.method === 'POST' && pathname === '/polls') {
     return event.respondWith(createPoll(event.request))
+  } else if (
+    event.request.method === 'POST' &&
+    pathname.startsWith('/polls') &&
+    pathname.endsWith('/pop')
+  ) {
+    const key = pathname.split('/', 4)[2]
+    return event.respondWith(upvote(key, event.request))
   } else if (event.request.method === 'GET' && pathname.startsWith('/polls')) {
     const key = pathname.split('/', 3)[2]
     return event.respondWith(getPollWithKey(key))
