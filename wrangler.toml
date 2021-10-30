@@ -1,0 +1,12 @@
+name = "poppoll-worker"
+type = "javascript"
+zone_id = ""
+account_id = "04a9de6e38c946f1e83355b6faa9c657"
+route = ""
+workers_dev = true
+compatibility_date = "2021-10-30"
+
+[build]
+command = "npm install && npm run build"
+[build.upload]
+format = "service-worker"
