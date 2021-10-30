@@ -1,5 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
 declare const SUPABASE_KEY: string
+
+import { createClient } from '@supabase/supabase-js'
+import { nanoid } from 'nanoid'
 
 const SUPABASE_URL = 'https://rntidcyilmxescqtmwww.supabase.co'
 
@@ -24,14 +26,17 @@ export async function getPollWithKey(key: string): Promise<Response> {
 
   return response(result, 200)
 }
+
 export async function createPoll(request: Request): Promise<Response> {
   const data = await request.json()
 
-  const { name, start_at, end_at, key } = data as any
+  const { name, start_at, end_at } = data as any
 
-  if (!name || !start_at || !end_at || !key) {
+  if (!name || !start_at || !end_at) {
     return response({ error: 'Invalid input' }, 400)
   }
+
+  const key = nanoid()
 
   try {
     const { body, error } = await supabase
@@ -54,6 +59,7 @@ function response(body: Record<string, any>, status: number) {
   return new Response(JSON.stringify(body), {
     headers: {
       'content-type': 'application/json;charset=UTF-8',
+      'Access-Control-Allow-Origin': '*',
     },
     status,
   })
