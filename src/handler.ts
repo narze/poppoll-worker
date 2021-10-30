@@ -13,43 +13,48 @@ export async function getPollWithKey(key: string): Promise<Response> {
     .limit(1)
 
   if (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-    })
+    return response({ error: error.message }, 400)
   }
 
   if (body && !body.length) {
-    return new Response(JSON.stringify({ error: 'Not Found' }), {
-      status: 404,
-    })
-  }
-
-  const responseOptions = {
-    headers: {
-      'content-type': 'application/json;charset=UTF-8',
-    },
-    status: 200,
+    return response({ error: 'Not Found' }, 404)
   }
 
   const result = body && body[0]
 
-  return new Response(JSON.stringify(result), responseOptions)
+  return response(result, 200)
 }
 export async function createPoll(request: Request): Promise<Response> {
-  // console.log(await request.json())
-  // const name = 'test',
-  //   start_at = new Date().toUTCString(),
-  //   end_at = new Date().toUTCString(),
-  //   key = '1234'
+  const data = await request.json()
 
-  // try {
-  //   const { body, error } = await supabase
-  //     .from('poll')
-  //     .insert([{ name, start_at, end_at, key }])
-  //   console.log({ body, err: JSON.stringify(error) })
-  // } catch (error) {
-  //   console.log('error', error)
-  // }
+  const { name, start_at, end_at, key } = data as any
 
-  return new Response(`request method: ${request.method}`)
+  if (!name || !start_at || !end_at || !key) {
+    return response({ error: 'Invalid input' }, 400)
+  }
+
+  try {
+    const { body, error } = await supabase
+      .from('poll')
+      .insert([{ name, start_at, end_at, key }])
+
+    if (error) {
+      return response({ error: error.message }, 400)
+    }
+
+    const result = body && body[0]
+
+    return response(result, 201)
+  } catch (error) {
+    return response({ error: (error as Error).message }, 400)
+  }
+}
+
+function response(body: Record<string, any>, status: number) {
+  return new Response(JSON.stringify(body), {
+    headers: {
+      'content-type': 'application/json;charset=UTF-8',
+    },
+    status,
+  })
 }
