@@ -2,6 +2,7 @@ declare const SUPABASE_KEY: string
 
 import { createClient } from '@supabase/supabase-js'
 import { nanoid } from 'nanoid'
+import { DateTime } from 'luxon'
 
 const SUPABASE_URL = 'https://rntidcyilmxescqtmwww.supabase.co'
 
@@ -46,6 +47,16 @@ export async function createPoll(request: Request): Promise<Response> {
 
   if (!name || !start_at || !end_at) {
     return response({ error: 'Invalid input' }, 400)
+  }
+
+  const startAt = DateTime.fromISO(start_at)
+  const endAt = DateTime.fromISO(end_at)
+  if(!endAt.isValid || !startAt.isValid){
+    return response({ error: 'Invalid date format for start and end' }, 400)
+  }
+
+  if(endAt.diff(startAt, 'hours') > 24){
+    return response({ error: 'Invalid start/end setting. Poll cannot be longer than 24h' }, 400)
   }
 
   const key = nanoid()
